@@ -1,6 +1,8 @@
 require("dotenv").config();
 import nodemailer from "nodemailer";
 import { reviews } from "@/constants";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 
 const transporter = nodemailer.createTransport({
     service: "gmail", // or your preferred email service
@@ -11,6 +13,27 @@ const transporter = nodemailer.createTransport({
 });
 
 export async function POST(req) {
+    // This route sends mail from the organisation's own Gmail account, with a
+    // caller-supplied subject, body and recipient list. Without a check anyone
+    // could send anything to anyone, signed as the organisation.
+    const session = await auth.api.getSession({
+        headers: await headers(),
+    });
+
+    if (!session?.user) {
+        return new Response(
+            JSON.stringify({ error: "Authentication required" }),
+            { status: 401 }
+        );
+    }
+
+    if (session.user.role !== "admin") {
+        return new Response(
+            JSON.stringify({ error: "Forbidden" }),
+            { status: 403 }
+        );
+    }
+
     const { recipients, payloadData } = await req.json();
 
     if (!recipients || recipients.length === 0) {
