@@ -298,45 +298,74 @@ const FormComp = ({ dept1, dept2, isLoading, setIsLoading }) => {
 
   if (loading) {
     return (
-      <div>
-        <p>Checking your application status...</p>
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="text-center">
+          <span className="mx-auto mb-4 block h-10 w-10 animate-spin rounded-full border-2 border-muted border-t-primary" />
+          <p className="text-muted-foreground">Checking your application status...</p>
+        </div>
       </div>
     );
   }
 
   if (!isFormOpen) {
     return (
-      <div>
-        <p>Recruitment Closed</p>
-        <p>Recruitment has now been terminated.</p>
+      <div className="mx-auto max-w-md px-4 py-24 text-center">
+        <h1 className="text-2xl font-semibold text-foreground">Recruitment Closed</h1>
+        <p className="mt-3 text-muted-foreground">Recruitment has now been terminated.</p>
       </div>
     );
   }
 
   return (
-    <main>
+    <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
+      <header className="mb-10">
+        <p className="text-sm font-medium uppercase tracking-widest text-primary">
+          Step 02 · Apply
+        </p>
+        <h1 className="mt-3 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+          Application Form
+        </h1>
+        <p className="mt-4 text-muted-foreground">
+          Applying to{" "}
+          {departmentNames.map((name) => (
+            <span
+              key={name}
+              className="mr-2 inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-sm font-medium text-primary"
+            >
+              {name}
+            </span>
+          ))}
+        </p>
+      </header>
+
       {errorMessage && !isSubmitting && (
-        <div>
-          <p style={{ color: "red" }}>{errorMessage}</p>
-          <button type="button" onClick={() => router.push("/departments")}>
-            Go Back
-          </button>
+        <div
+          role="alert"
+          className="mb-8 flex items-start gap-3 rounded-lg border border-destructive/40 bg-destructive/10 p-4"
+        >
+          <X className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+          <div className="flex-1">
+            <p className="text-sm text-destructive">{errorMessage}</p>
+            <button
+              type="button"
+              onClick={() => router.push("/departments")}
+              className="mt-2 text-sm font-medium underline underline-offset-4 hover:no-underline"
+            >
+              Go back to departments
+            </button>
+          </div>
         </div>
       )}
 
-      <h1>Application Form</h1>
-      <p>
-        Applying to: <strong>{departmentNames.join(", ")}</strong>
-      </p>
-
-      <hr />
-
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)}>
-          <section>
-            <h2>About You</h2>
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-10">
+          <section className="rounded-xl border border-border bg-card p-6">
+            <h2 className="text-lg font-semibold text-foreground">About You</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Your answers are saved as you type.
+            </p>
 
-            <div>
+            <div className="mt-6 grid gap-5 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="Name"
@@ -372,10 +401,12 @@ const FormComp = ({ dept1, dept2, isLoading, setIsLoading }) => {
                   <FormItem>
                     <FormLabel>Gender</FormLabel>
                     <FormControl>
-                      <select {...field} value={field.value || ""}>
-                        <option value="" disabled>
-                          Select Gender
-                        </option>
+                      <select
+                        {...field}
+                        value={field.value || ""}
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <option value="" disabled>Select Gender</option>
                         <option value="Male">Male</option>
                         <option value="Female">Female</option>
                         <option value="Other">Other</option>
@@ -394,10 +425,12 @@ const FormComp = ({ dept1, dept2, isLoading, setIsLoading }) => {
                   <FormItem>
                     <FormLabel>Year of Study</FormLabel>
                     <FormControl>
-                      <select {...field} value={field.value || ""}>
-                        <option value="" disabled>
-                          Select Year
-                        </option>
+                      <select
+                        {...field}
+                        value={field.value || ""}
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <option value="" disabled>Select Year</option>
                         <option value="1">1</option>
                         <option value="2">2</option>
                         <option value="3">3</option>
@@ -416,7 +449,7 @@ const FormComp = ({ dept1, dept2, isLoading, setIsLoading }) => {
                   <FormItem>
                     <FormLabel>Email Address</FormLabel>
                     <FormControl>
-                      <Input {...field} readOnly type="email" />
+                      <Input {...field} readOnly type="email" className="bg-muted text-muted-foreground" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -430,7 +463,7 @@ const FormComp = ({ dept1, dept2, isLoading, setIsLoading }) => {
                   <FormItem>
                     <FormLabel>Phone (WhatsApp)</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="+919876543210" />
+                      <Input {...field} placeholder="9876543210" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -438,7 +471,7 @@ const FormComp = ({ dept1, dept2, isLoading, setIsLoading }) => {
               />
             </div>
 
-            <div>
+            <div className="mt-5">
               <FormField
                 control={form.control}
                 name="Why do you want to join Organization Name?"
@@ -446,7 +479,7 @@ const FormComp = ({ dept1, dept2, isLoading, setIsLoading }) => {
                   <FormItem>
                     <FormLabel>Why do you want to join Organization Name?</FormLabel>
                     <FormControl>
-                      <Textarea {...field} rows={4} placeholder="2-3 Sentences" />
+                      <Textarea {...field} rows={4} placeholder="2-3 sentences" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -455,19 +488,24 @@ const FormComp = ({ dept1, dept2, isLoading, setIsLoading }) => {
             </div>
           </section>
 
-          <hr />
-
           {renderDepartmentQuestions(departmentNames[0], QuestionnaireData, form)}
           {departmentNames[1] && renderDepartmentQuestions(departmentNames[1], QuestionnaireData, form)}
 
-          <div style={{ marginTop: "20px" }}>
-            <button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Submitting..." : "Submit Application"}
-            </button>
+          <div className="sticky bottom-0 -mx-4 border-t border-border bg-background/90 px-4 py-4 backdrop-blur sm:-mx-6 sm:px-6">
+            <Button type="submit" disabled={isSubmitting} size="lg" className="w-full sm:w-auto">
+              {isSubmitting ? (
+                <>
+                  <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground" />
+                  Submitting...
+                </>
+              ) : (
+                "Submit Application"
+              )}
+            </Button>
           </div>
         </form>
       </Form>
-    </main>
+    </div>
   );
 };
 
@@ -481,39 +519,35 @@ const renderDepartmentQuestions = (department, QuestionnaireData, form) => {
   if (!questions.length) return null;
 
   return (
-    <section style={{ marginTop: "20px" }}>
-      <h2>{department} Questions</h2>
-      <div>
+    <section key={department} className="rounded-xl border border-border bg-card p-6">
+      <h2 className="text-lg font-semibold text-foreground">{department}</h2>
+      <p className="mt-1 text-sm text-muted-foreground">
+        {questions.length} question{questions.length === 1 ? "" : "s"}
+      </p>
+
+      <div className="mt-6 space-y-5">
         {questions.map((question) => {
           const isCompact = question.type === "short-text";
 
           return (
-            <div key={question.name} style={{ marginBottom: "16px" }}>
-              <FormField
-                control={form.control}
-                name={question.name}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{question.name}</FormLabel>
-                    <FormControl>
-                      {isCompact ? (
-                        <Input
-                          {...field}
-                          placeholder={question.placeholder || "Answer..."}
-                        />
-                      ) : (
-                        <Textarea
-                          {...field}
-                          rows={4}
-                          placeholder={question.placeholder || "2-3 sentences"}
-                        />
-                      )}
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            <FormField
+              key={question.name}
+              control={form.control}
+              name={question.name}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{question.name}</FormLabel>
+                  <FormControl>
+                    {isCompact ? (
+                      <Input {...field} placeholder={question.placeholder || "Answer..."} />
+                    ) : (
+                      <Textarea {...field} rows={4} placeholder={question.placeholder || "2-3 sentences"} />
+                    )}
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           );
         })}
       </div>

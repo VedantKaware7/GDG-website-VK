@@ -296,69 +296,98 @@ const DataTable = ({ data }) => {
   };
 
   return (
-    <div className="bg-[#121212] flex flex-col gap-3 p-3 mt-5">
-      <div className="flex items-start border-none justify-start gap-3 p-1 overflow-x-scroll">
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-card p-4">
         <Input
           value={globalFilter || ""}
           onChange={(e) => setGlobalFilter(e.target.value)}
-          placeholder="Filter Data"
-          className="min-w-[300px]"
+          placeholder="Search applicants..."
+          aria-label="Search applicants"
+          className="min-w-[240px] flex-1"
         />
         <Input
-          className="w-fit"
+          type="number"
+          min={1}
           onChange={(e) => handlePageSize(e)}
-          placeholder={"Page Size"}
+          placeholder="Rows"
+          aria-label="Rows per page"
+          className="w-24"
         />
         <FilterDepartment filterFunc={filterFunc} />
         <FilterShortlisted filterFunc={shortlistedFilterFunc} />
         <DialogComp selectedApplicants={showRowData} />
-        <Button onClick={() => window.location.reload()} className="flex gap-2">
+
+        <Button
+          variant="outline"
+          onClick={() => window.location.reload()}
+          className="gap-2"
+        >
           <GrPowerReset />
-          Reset Filters
+          Reset
         </Button>
-        <Button>
-          <CSVLink
-            {...csv_link}
-            className="flex gap-2 justify-center items-center"
-          >
-            <IoCloudDownloadOutline />
-            Download CSV
-          </CSVLink>
-        </Button>
+
+        <CSVLink
+          {...csv_link}
+          className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+        >
+          <IoCloudDownloadOutline />
+          Download CSV
+        </CSVLink>
       </div>
 
-      <div className="border rounded-md">
+      <div className="overflow-x-auto rounded-xl border border-border">
         <Table {...getTableProps()}>
           <TableHeader>
-            {headerGroups.map((hg) => (
-              <TableRow key={`${hg.id}-${Math.random()}`} {...hg.getHeaderGroupProps()}>
-                {hg.headers.map((header) => (
-                  <TableHead
-                    key={`${header.id}-${Math.random()}`}
-                    {...header.getHeaderProps(header.getSortByToggleProps())}
-                  >
-                    <div className="inline-flex gap-1 items-center">
-                      {header.render("Header")}
-                      <FaSortAmountDownAlt />
-                    </div>
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody {...getTableBodyProps()}>
-            {page.map((row) => {
-              prepareRow(row);
+            {headerGroups.map((hg) => {
+              const { key: hgKey, ...hgProps } = hg.getHeaderGroupProps();
               return (
-                <TableRow key={`${row.id}-${Math.random()}`} {...row.getRowProps()}>
-                  {row.cells.map((cell) => (
-                    <TableCell key={`${cell.id}-${Math.random()}`} {...cell.getCellProps()}>
-                      {cell.render("Cell")}
-                    </TableCell>
-                  ))}
+                <TableRow key={hgKey} {...hgProps}>
+                  {hg.headers.map((header) => {
+                    const { key: hKey, ...hProps } = header.getHeaderProps(
+                      header.getSortByToggleProps()
+                    );
+                    return (
+                      <TableHead key={hKey} {...hProps} className="whitespace-nowrap">
+                        <div className="inline-flex items-center gap-1.5">
+                          {header.render("Header")}
+                          <FaSortAmountDownAlt className="h-3 w-3 text-muted-foreground" />
+                        </div>
+                      </TableHead>
+                    );
+                  })}
                 </TableRow>
               );
             })}
+          </TableHeader>
+
+          <TableBody {...getTableBodyProps()}>
+            {page.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={headerGroups[0]?.headers.length || 1}
+                  className="py-12 text-center text-muted-foreground"
+                >
+                  No applications match these filters.
+                </TableCell>
+              </TableRow>
+            ) : (
+              page.map((row) => {
+                prepareRow(row);
+                const { key: rowKey, ...rowProps } = row.getRowProps();
+                return (
+                  <TableRow key={rowKey} {...rowProps}>
+                    {row.cells.map((cell) => {
+                      const { key: cellKey, ...cellProps } = cell.getCellProps();
+                      return (
+                        <TableCell key={cellKey} {...cellProps}>
+                          {cell.render("Cell")}
+                        </TableCell>
+                      );
+                    })}
+                  </TableRow>
+                );
+              })
+            )}
           </TableBody>
         </Table>
       </div>

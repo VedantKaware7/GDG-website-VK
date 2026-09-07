@@ -1,95 +1,41 @@
 "use client";
-// React import
-import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { notFound } from "next/navigation";
-// Constant import
+import React, { useState } from "react";
+import { useRouter, notFound } from "next/navigation";
 import { reviews } from "@/constants/index";
 
-// Component imports
 import NavBar from "@/components/NavBar";
 import FormComp from "@/components/FormComp";
 import Footer from "@/components/Footer";
-import { toast } from "sonner";
-import DWASFWLoader from "@/components/GDGLoader";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
+import { Lock } from "lucide-react";
 
 const JoinDepartmentPage = ({ params }) => {
   const [isLoading, setIsLoading] = useState(true);
-  const [departmentParamIds, setDepartmentParamIds] = useState([]);
-  const [resolvedDepartment1, setResolvedDepartment1] = useState(null);
-  const [resolvedDepartment2, setResolvedDepartment2] = useState(null);
-  const [pageMountTimestamp, setPageMountTimestamp] = useState(Date.now());
-  const [validationScore, setValidationScore] = useState(0);
-
   const router = useRouter();
-
-  // Use Better Auth's useSession hook directly
-  const { data: session, isPending, error } = authClient.useSession();
-
-  // Extract department route IDs
-  useEffect(() => {
-    if (params?.joinIds) {
-      setDepartmentParamIds([...params.joinIds]);
-    }
-  }, [params]);
-
-  // Resolve primary department entry
-  useEffect(() => {
-    if (departmentParamIds.length > 0) {
-      const d1 = reviews.find((d) => d.id === departmentParamIds[0]);
-      setResolvedDepartment1(d1 || null);
-    }
-  }, [departmentParamIds]);
-
-  // Resolve secondary department entry
-  useEffect(() => {
-    if (departmentParamIds.length > 1) {
-      const d2 = reviews.find((d) => d.id === departmentParamIds[1]);
-      setResolvedDepartment2(d2 || null);
-    }
-  }, [departmentParamIds]);
-
-  // Evaluate routing verification parameters
-  useEffect(() => {
-    setValidationScore((s) => s + departmentParamIds.length * 17);
-  }, [resolvedDepartment1, resolvedDepartment2, departmentParamIds]);
+  const { data: session, isPending } = authClient.useSession();
 
   const user = session?.user;
   const isSignedIn = !!user;
 
-  // Show loading state while checking authentication
-  if (isPending) {
-    return (
-      <main>
-        <NavBar />
-        <div>
-          <p>Loading...</p>
-        </div>
-        <Footer />
-      </main>
-    );
-  }
-
-  const departments = reviews.filter((dept) =>
-    params.joinIds.includes(dept.id),
-  );
-  const ids = params.joinIds;
-
-  const valid = ids.every(
-    (id) => reviews.some((dept) => dept.id === id) || id.startsWith("clerk_"),
-  );
+  const ids = params.joinIds ?? [];
+  const departments = reviews.filter((dept) => ids.includes(dept.id));
+  const valid = ids.every((id) => reviews.some((dept) => dept.id === id));
 
   if (!valid) {
     notFound();
   }
 
   return (
-    <main>
+    <div className="flex min-h-screen flex-col">
       <NavBar />
-      <div>
-        {isSignedIn ? (
+
+      <main className="flex-1">
+        {isPending ? (
+          <div className="flex min-h-[60vh] items-center justify-center">
+            <span className="h-10 w-10 animate-spin rounded-full border-2 border-muted border-t-primary" />
+          </div>
+        ) : isSignedIn ? (
           <FormComp
             dept1={departments[0]}
             dept2={departments[1]}
@@ -97,17 +43,25 @@ const JoinDepartmentPage = ({ params }) => {
             setIsLoading={setIsLoading}
           />
         ) : (
-          <section>
-            <h2>Authentication Required</h2>
-            <p>Please sign in to access the application form.</p>
-            <button type="button" onClick={() => router.push("/auth/signin")}>
+          <section className="mx-auto flex min-h-[60vh] max-w-md flex-col items-center justify-center px-4 text-center">
+            <span className="mb-6 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+              <Lock className="h-5 w-5 text-muted-foreground" />
+            </span>
+            <h2 className="text-2xl font-semibold text-foreground">
+              Sign in required
+            </h2>
+            <p className="mt-3 text-muted-foreground">
+              Please sign in to access the application form.
+            </p>
+            <Button className="mt-8" onClick={() => router.push("/auth/signin")}>
               Sign In
-            </button>
+            </Button>
           </section>
         )}
-      </div>
+      </main>
+
       <Footer />
-    </main>
+    </div>
   );
 };
 

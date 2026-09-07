@@ -2,9 +2,11 @@ import React from "react";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import NavBar from "@/components/NavBar";
+import Footer from "@/components/Footer";
 import { connect, serializeFirestoreData } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import AdminContent from "@/components/AdminContent";
+import { ShieldAlert } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -21,10 +23,21 @@ export default async function AdminPage() {
 
   if (session.user.role !== "admin") {
     return (
-      <main>
+      <div className="flex min-h-screen flex-col">
         <NavBar />
-        <div>Access Denied! You are not authorized to view this webpage.</div>
-      </main>
+        <main className="flex flex-1 items-center justify-center px-4">
+          <div className="max-w-md text-center">
+            <span className="mx-auto mb-6 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
+              <ShieldAlert className="h-5 w-5 text-destructive" />
+            </span>
+            <h1 className="text-2xl font-semibold text-foreground">Access denied</h1>
+            <p className="mt-3 text-muted-foreground">
+              You are not authorized to view this page.
+            </p>
+          </div>
+        </main>
+        <Footer />
+      </div>
     );
   }
 
@@ -37,9 +50,12 @@ export default async function AdminPage() {
   }));
 
   return (
-    <main>
+    <div className="flex min-h-screen flex-col">
       <NavBar />
-      <AdminContent applicants={applicants} />
-    </main>
+      <main className="flex-1">
+        <AdminContent applicants={applicants} />
+      </main>
+      <Footer />
+    </div>
   );
 }

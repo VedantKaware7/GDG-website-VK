@@ -1,7 +1,9 @@
 import React from "react";
 import Link from "next/link";
 import NavBar from "@/components/NavBar";
+import Footer from "@/components/Footer";
 import DeptHero from "@/components/DeptHero";
+import { ArrowRight } from "lucide-react";
 
 const features = [
     {
@@ -22,22 +24,37 @@ const features = [
 
 const page = () => {
     return (
-        <main>
+        <div className="flex min-h-screen flex-col">
             <NavBar />
             <DeptHero dept={{ name: "Development Departments" }} />
 
-            <div>
-                <ul>
-                    {features.map((feature) => (
-                        <li key={feature.name}>
-                            <h2>{feature.name}</h2>
-                            <p>{feature.description}</p>
-                            <Link href={feature.href}>{feature.cta}</Link>
-                        </li>
-                    ))}
-                </ul>
-            </div>
-        </main>
+            <main className="flex-1">
+                <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
+                    <ul className="grid gap-4 sm:grid-cols-2">
+                        {features.map((feature) => (
+                            <li
+                                key={feature.name}
+                                className="flex flex-col rounded-xl border border-border bg-card p-6"
+                            >
+                                <h2 className="font-semibold text-foreground">{feature.name}</h2>
+                                <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">
+                                    {feature.description}
+                                </p>
+                                <Link
+                                    href={feature.href}
+                                    className="group mt-6 inline-flex w-fit items-center text-sm font-medium text-primary hover:underline"
+                                >
+                                    {feature.cta}
+                                    <ArrowRight className="ml-1.5 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                                </Link>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            </main>
+
+            <Footer />
+        </div>
     );
 };
 
