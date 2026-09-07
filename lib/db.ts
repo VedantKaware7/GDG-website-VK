@@ -15,6 +15,13 @@ const hasServiceAccount =
 const hasCredentials =
   hasServiceAccount || Boolean(GOOGLE_APPLICATION_CREDENTIALS) || Boolean(process.env.FIRESTORE_EMULATOR_HOST);
 
+// The connection is cached on `global` so that Next.js hot reloads in
+// development reuse one Firestore instance instead of opening a new one on
+// every request.
+type FirestoreConn = {
+  db: Firestore | null;
+};
+
 let cached: FirestoreConn = (global as any).firestore;
 
 if (!cached) {
