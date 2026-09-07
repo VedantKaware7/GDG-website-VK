@@ -70,11 +70,38 @@ export async function POST(req) {
       );
     }
 
+    // Only these fields may come from the request body. Spreading the whole
+    // body here would let an applicant set any field they like on their own
+    // application record -- including `shortlisted`.
+    const APPLICANT_FIELDS = [
+      "Name",
+      "RegistrationNumber",
+      "Phone",
+      "Gender",
+      "Year of Study",
+    ];
+
+    const applicantDetails = {};
+    for (const field of APPLICANT_FIELDS) {
+      const value = formFields[field];
+      if (typeof value === "string" && value.trim() !== "") {
+        applicantDetails[field] = value.trim();
+      }
+    }
+
+    // Questions must be a plain object of answers, not an array or anything else.
+    const answers =
+      Questions && typeof Questions === "object" && !Array.isArray(Questions)
+        ? Questions
+        : {};
+
     await collection.add({
-      ...formFields,
+      ...applicantDetails,
       Department,
-      Questions,
+      Questions: answers,
       Email: userEmail,
+      // Decided by admins only, never by the applicant.
+      shortlisted: false,
       createdAt: new Date(),
     });
 

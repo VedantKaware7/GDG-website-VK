@@ -1,6 +1,13 @@
 import { initializeApp, cert, getApps } from "firebase-admin/app";
 import { getFirestore, Firestore } from "firebase-admin/firestore";
 
+if (typeof window !== "undefined") {
+  throw new Error(
+    "lib/db.ts is server-only. Do not import it from a client component.",
+  );
+}
+
+
 const FIREBASE_PROJECT_ID = process.env.FIREBASE_PROJECT_ID || "demo-DWASFW-rec";
 const FIREBASE_CLIENT_EMAIL = process.env.FIREBASE_CLIENT_EMAIL;
 const FIREBASE_PRIVATE_KEY = process.env.FIREBASE_PRIVATE_KEY?.replace(
