@@ -60,10 +60,15 @@ export default function SignInPage() {
           : await authClient.signIn.email({ email, password, callbackURL: "/" });
 
       if (res?.error) {
-        toast.error(
+        // Surface the server's own reason. Config problems such as
+        // INVALID_ORIGIN arrive as a code with no message, and a generic
+        // "failed" string makes them impossible to diagnose.
+        console.error("Auth failed:", res.error);
+        const reason =
           res.error.message ||
-            (mode === "signup" ? "Failed to create account." : "Invalid credentials.")
-        );
+          res.error.code ||
+          (mode === "signup" ? "Failed to create account." : "Invalid credentials.");
+        toast.error(reason);
       } else {
         toast.success(mode === "signup" ? "Account created." : "Signed in.");
         router.push("/");
