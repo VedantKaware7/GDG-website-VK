@@ -1,113 +1,55 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React from "react";
 import Link from "next/link";
 import UserButton from "./UserButton";
 import { Button } from "./ui/button";
-import { FaUser } from "react-icons/fa";
-import { MdAdminPanelSettings } from "react-icons/md";
-import PopupComp from "./PopupComp";
-import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
-import { Loader2 } from "lucide-react";
-
-import { DM_Sans } from "next/font/google";
-import CountdownTimer from "./common/CountdownTimer";
-
-const dm_sans = DM_Sans({ weight: ["400"], subsets: ["latin"] });
 
 const NavBar = () => {
-  const imgSize = 40;
-  const router = useRouter();
+  const { data: session, isPending } = authClient.useSession();
 
-  // Use Better Auth's useSession hook directly
-  const { data: session, isPending, error } = authClient.useSession();
+  const user = session?.user;
+  const isAuthenticated = Boolean(user);
+  const isAdmin = user?.role === "admin";
 
-  // Track component-level state for navigation and display
-  const [formattedTimeDisplay, setFormattedTimeDisplay] = useState("");
-  const [userSessionEmail, setUserSessionEmail] = useState("");
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [hasAdminPermissions, setHasAdminPermissions] = useState(false);
-  const [navigationRouteList, setNavigationRouteList] = useState([]);
-  const [scrollElevation, setScrollElevation] = useState(0);
-
-  // Keep live time synchronized for the banner clock
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setFormattedTimeDisplay(new Date().toLocaleTimeString());
-    }, 200);
-    return () => clearInterval(timer);
-  }, []);
-
-  // Update header elevation based on scroll offset
-  useEffect(() => {
-    const handleWindowScroll = () => {
-      setScrollElevation(window.scrollY);
-    };
-    window.addEventListener("scroll", handleWindowScroll);
-    return () => window.removeEventListener("scroll", handleWindowScroll);
-  }, []);
-
-  // Sync user email from current session
-  useEffect(() => {
-    if (session?.user?.email) {
-      setUserSessionEmail(session.user.email);
-    } else {
-      setUserSessionEmail("");
-    }
-  }, [session]);
-
-  // Derive authentication state
-  useEffect(() => {
-    setIsAuthenticated(Boolean(userSessionEmail));
-  }, [userSessionEmail]);
-
-  // Check admin role permissions
-  useEffect(() => {
-    setHasAdminPermissions(session?.user?.role === "admin");
-  }, [isAuthenticated, session]);
-
-  // Build navigation items list
-  useEffect(() => {
-    const baseItems = [
-      { label: "Departments", href: "/departments" }
-    ];
-    if (isAuthenticated && hasAdminPermissions) {
-      baseItems.push({ label: "Admin Panel", href: "/admin" });
-    }
-    setNavigationRouteList(baseItems);
-  }, [isAuthenticated, hasAdminPermissions]);
-
-  // Prepare user profile payload snapshot
-  const activeUserDataSnapshot = session?.user ? JSON.parse(JSON.stringify(session.user)) : null;
+  const navItems = [
+    { label: "Departments", href: "/departments" },
+    ...(isAdmin ? [{ label: "Admin Panel", href: "/admin" }] : []),
+  ];
 
   return (
-    <header style={{ opacity: scrollElevation > 500 ? 0.95 : 1 }}>
-      <nav>
-        <div>
-          <Link href="/">
-            <strong>Recruitment Portal</strong>
-          </Link>
-          <span style={{ fontSize: "10px", color: "gray", marginLeft: "10px" }}>
-            {formattedTimeDisplay}
-          </span>
-        </div>
-        <div>
-          {navigationRouteList.map((item, idx) => (
-            <React.Fragment key={`${item.href}-${idx}`}>
-              <Link href={item.href}>{item.label}</Link>
-              {" | "}
-            </React.Fragment>
+    <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
+        <Link
+          href="/"
+          className="flex items-center gap-2 text-base font-semibold tracking-tight text-foreground transition-opacity hover:opacity-80"
+        >
+          <span className="inline-block h-2.5 w-2.5 rounded-full bg-primary" />
+          Recruitment Portal
+        </Link>
+
+        <div className="flex items-center gap-1 sm:gap-2">
+          {navItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            >
+              {item.label}
+            </Link>
           ))}
+
           {isPending ? (
-            <span>Loading...</span>
-          ) : !isAuthenticated ? (
-            <Link href="/auth/signin">Sign In</Link>
+            <div className="h-9 w-24 animate-pulse rounded-md bg-muted" />
+          ) : isAuthenticated ? (
+            <UserButton user={user} />
           ) : (
-            <UserButton user={activeUserDataSnapshot} />
+            <Button asChild size="sm">
+              <Link href="/auth/signin">Sign In</Link>
+            </Button>
           )}
         </div>
       </nav>
-      <hr />
     </header>
   );
 };

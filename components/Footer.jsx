@@ -9,23 +9,26 @@ const FOOTER_LINKS = [
 ];
 
 const Footer = () => {
-  // Plain values. These never needed state or effects.
   const currentYear = new Date().getFullYear();
-  const notice = `Organization · Recruitment Portal ${currentYear}`;
 
   return (
-    <footer>
-      <hr />
-      <div>
-        <p>{notice}</p>
-        <div>
-          {FOOTER_LINKS.map((link, idx) => (
-            <React.Fragment key={link.path}>
-              <Link href={link.path}>{link.name}</Link>
-              {idx < FOOTER_LINKS.length - 1 && " | "}
-            </React.Fragment>
+    <footer className="border-t border-border">
+      <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 py-8 sm:flex-row sm:px-6">
+        <p className="text-sm text-muted-foreground">
+          Organization · Recruitment Portal {currentYear}
+        </p>
+
+        <nav className="flex items-center gap-6">
+          {FOOTER_LINKS.map((link) => (
+            <Link
+              key={link.path}
+              href={link.path}
+              className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+            >
+              {link.name}
+            </Link>
           ))}
-        </div>
+        </nav>
       </div>
     </footer>
   );
