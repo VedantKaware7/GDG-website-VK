@@ -1,8 +1,11 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // The app talks to Firestore only through firebase-admin on the server,
+    // and the Admin SDK ignores these rules. No browser code connects to
+    // Firestore, so denying everything here blocks nothing legitimate.
     match /{document=**} {
-      allow read, write: if true;
+      allow read, write: if false;
     }
   }
 }
