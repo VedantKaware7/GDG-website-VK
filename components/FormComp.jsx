@@ -102,6 +102,7 @@ const FormComp = ({ dept1, dept2, isLoading, setIsLoading }) => {
       .string()
       .min(1, "Phone is required")
       .regex(/^\d{10}$/, "Phone number must be exactly 10 digits"),
+    Gender: z.string().optional(),
     "Year of Study": z.string().optional(),
   };
 
@@ -241,6 +242,7 @@ const FormComp = ({ dept1, dept2, isLoading, setIsLoading }) => {
       RegistrationNumber: values.RegistrationNumber,
       Email: values.Email,
       Phone: values.Phone,
+      Gender: values.Gender,
       "Year of Study": values["Year of Study"],
     };
 
@@ -378,6 +380,28 @@ const FormComp = ({ dept1, dept2, isLoading, setIsLoading }) => {
                         <option value="Female">Female</option>
                         <option value="Other">Other</option>
                         <option value="Prefer not to say">Prefer not to say</option>
+                      </select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="Year of Study"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Year of Study</FormLabel>
+                    <FormControl>
+                      <select {...field} value={field.value || ""}>
+                        <option value="" disabled>
+                          Select Year
+                        </option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
                       </select>
                     </FormControl>
                     <FormMessage />
