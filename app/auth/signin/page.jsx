@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Bricolage_Grotesque, Space_Grotesk } from "next/font/google";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -17,23 +17,11 @@ import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
 import DWASFWLoader from "@/components/GDGLoader";
 
-const bricolageGrotesque = Bricolage_Grotesque({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
-  variable: "--font-bricolage-grotesque",
-});
-
-const spaceGrotesk = Space_Grotesk({
-  subsets: ["latin"],
-  weight: ["400", "500", "700"],
-  variable: "--font-space-grotesk",
-});
-
 export default function SignInPage() {
   const router = useRouter();
   const { data: session, isPending } = authClient.useSession();
 
-  const [mode, setMode] = useState("signin"); // "signin" | "signup"
+  const [mode, setMode] = useState("signin");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -45,16 +33,10 @@ export default function SignInPage() {
     }
   }, [session, isPending, router]);
 
-  if (isPending) {
-    return <DWASFWLoader />;
-  }
-
-  if (session?.user) {
+  if (isPending || session?.user) {
     return (
-      <div className="min-h-screen bg-[#0d0d11] flex items-center justify-center">
-        <div className="text-center text-white">
-          <p className="text-sm text-zinc-400">Redirecting...</p>
-        </div>
+      <div className="flex min-h-screen items-center justify-center">
+        <DWASFWLoader />
       </div>
     );
   }
@@ -65,7 +47,6 @@ export default function SignInPage() {
       toast.error("Please fill in all required fields.");
       return;
     }
-
     if (mode === "signup" && !name) {
       toast.error("Please enter your name.");
       return;
@@ -73,31 +54,19 @@ export default function SignInPage() {
 
     setSubmitting(true);
     try {
-      if (mode === "signup") {
-        const res = await authClient.signUp.email({
-          email,
-          password,
-          name,
-          callbackURL: "/",
-        });
-        if (res?.error) {
-          toast.error(res.error.message || "Failed to create account.");
-        } else {
-          toast.success("Account created successfully!");
-          router.push("/");
-        }
+      const res =
+        mode === "signup"
+          ? await authClient.signUp.email({ email, password, name, callbackURL: "/" })
+          : await authClient.signIn.email({ email, password, callbackURL: "/" });
+
+      if (res?.error) {
+        toast.error(
+          res.error.message ||
+            (mode === "signup" ? "Failed to create account." : "Invalid credentials.")
+        );
       } else {
-        const res = await authClient.signIn.email({
-          email,
-          password,
-          callbackURL: "/",
-        });
-        if (res?.error) {
-          toast.error(res.error.message || "Invalid credentials.");
-        } else {
-          toast.success("Signed in successfully!");
-          router.push("/");
-        }
+        toast.success(mode === "signup" ? "Account created." : "Signed in.");
+        router.push("/");
       }
     } catch (err) {
       console.error("Auth error:", err);
@@ -107,79 +76,121 @@ export default function SignInPage() {
     }
   };
 
+  const isSignup = mode === "signup";
+
   return (
-    <main style={{ padding: "20px", maxWidth: "400px", margin: "40px auto" }}>
-      <h1>Recruitment 2026</h1>
-      <p>Candidate Portal</p>
+    <main className="flex min-h-screen flex-col items-center justify-center px-4 py-12">
+      <Link href="/" className="mb-8 flex items-center gap-2 text-sm font-semibold text-foreground">
+        <span className="inline-block h-2.5 w-2.5 rounded-full bg-primary" />
+        Recruitment Portal
+      </Link>
 
-      <div>
-        <button
-          type="button"
-          onClick={() => setMode("signin")}
-          disabled={mode === "signin"}
-        >
-          Sign In
-        </button>
-        {" | "}
-        <button
-          type="button"
-          onClick={() => setMode("signup")}
-          disabled={mode === "signup"}
-        >
-          Create Account
-        </button>
-      </div>
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle className="text-2xl">
+            {isSignup ? "Create your account" : "Welcome back"}
+          </CardTitle>
+          <CardDescription>
+            {isSignup
+              ? "Register to start your application for Recruitment 2026."
+              : "Sign in to continue your application."}
+          </CardDescription>
+        </CardHeader>
 
-      <hr />
-
-      <h2>{mode === "signin" ? "Sign In" : "Create Account"}</h2>
-
-      <form onSubmit={handleSubmit}>
-        {mode === "signup" && (
-          <div style={{ marginBottom: "12px" }}>
-            <label htmlFor="name">Full Name: </label>
-            <br />
-            <input
-              id="name"
-              type="text"
-              placeholder="Jane Doe"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
+        <CardContent>
+          <div className="mb-6 grid grid-cols-2 gap-1 rounded-lg bg-muted p-1">
+            <button
+              type="button"
+              onClick={() => setMode("signin")}
+              className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                !isSignup
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Sign In
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode("signup")}
+              className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                isSignup
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Register
+            </button>
           </div>
-        )}
 
-        <div style={{ marginBottom: "12px" }}>
-          <label htmlFor="email">Email Address: </label>
-          <br />
-          <input
-            id="email"
-            type="email"
-            placeholder="name@example.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </div>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {isSignup && (
+              <div className="space-y-2">
+                <Label htmlFor="name">Full name</Label>
+                <Input
+                  id="name"
+                  type="text"
+                  placeholder="Jane Doe"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  autoComplete="name"
+                  required
+                />
+              </div>
+            )}
 
-        <div style={{ marginBottom: "12px" }}>
-          <label htmlFor="password">Password: </label>
-          <br />
-          <input
-            id="password"
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email address</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="name@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
+                required
+              />
+            </div>
 
-        <button type="submit" disabled={submitting}>
-          {submitting ? "Processing..." : mode === "signin" ? "Sign In" : "Create Account"}
-        </button>
-      </form>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="At least 8 characters"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete={isSignup ? "new-password" : "current-password"}
+                required
+              />
+            </div>
+
+            <Button type="submit" disabled={submitting} className="w-full">
+              {submitting ? (
+                <>
+                  <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground" />
+                  Please wait
+                </>
+              ) : isSignup ? (
+                "Create account"
+              ) : (
+                "Sign in"
+              )}
+            </Button>
+          </form>
+
+          <p className="mt-6 text-center text-sm text-muted-foreground">
+            {isSignup ? "Already have an account?" : "Don't have an account?"}{" "}
+            <button
+              type="button"
+              onClick={() => setMode(isSignup ? "signin" : "signup")}
+              className="font-medium text-primary hover:underline"
+            >
+              {isSignup ? "Sign in" : "Register"}
+            </button>
+          </p>
+        </CardContent>
+      </Card>
     </main>
   );
 }

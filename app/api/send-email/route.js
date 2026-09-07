@@ -12,16 +12,12 @@ const transporter = nodemailer.createTransport({
     },
 });
 
-// Display-name groupings, preserved from the original if/else chain. These
-// keys are the pre-scrub department names, so none of them match today's
-// constants -- the lookup simply falls through to the real name.
+// Groups sibling departments under one display name in emails, so #dept reads
+// "Development Department" rather than "Web Dev".
 const DEPARTMENT_LABELS = {
-    "Web Development": "Development Department",
-    "App Development": "Development Department",
-    Photography: "Photography & Video Editing Department",
-    "Video Editing": "Photography & Video Editing Department",
+    "Web Dev": "Development Department",
+    "App Dev": "Development Department",
 };
-
 export async function POST(req) {
     // This route sends mail from the organisation's own Gmail account, with a
     // caller-supplied subject, body and recipient list. Without a check anyone
