@@ -12,6 +12,16 @@ const transporter = nodemailer.createTransport({
     },
 });
 
+// Display-name groupings, preserved from the original if/else chain. These
+// keys are the pre-scrub department names, so none of them match today's
+// constants -- the lookup simply falls through to the real name.
+const DEPARTMENT_LABELS = {
+    "Web Development": "Development Department",
+    "App Development": "Development Department",
+    Photography: "Photography & Video Editing Department",
+    "Video Editing": "Photography & Video Editing Department",
+};
+
 export async function POST(req) {
     // This route sends mail from the organisation's own Gmail account, with a
     // caller-supplied subject, body and recipient list. Without a check anyone
@@ -43,53 +53,66 @@ export async function POST(req) {
         );
     }
 
-    try {
-        for (const recipient of recipients) {
-            let depart = recipient.Department;
-            if (depart === "Video Editing") {
-                depart = "Photography";
-            }
-            const dept = reviews.find((item) => item.name === depart);
+    if (!payloadData?.subject || !payloadData?.body) {
+        return new Response(
+            JSON.stringify({ error: "subject and body are required" }),
+            { status: 400 }
+        );
+    }
 
-            let deptName = dept.name;
-            if (
-                deptName === "Web Development" ||
-                deptName === "App Development"
-            ) {
-                deptName = "Development Department";
+    const sent = [];
+    const failed = [];
+
+    // Sent one at a time on purpose: Gmail app passwords have low rate limits
+    // and firing these in parallel gets the account flagged.
+    for (const recipient of recipients) {
+        try {
+            if (!recipient?.Email) {
+                failed.push({ email: null, reason: "missing email address" });
+                continue;
             }
 
-            if (deptName === "Photography" || deptName === "Video Editing") {
-                deptName = "Photography & Video Editing Department";
-            }
+            const known = reviews.find((item) => item.name === recipient.Department);
+            const deptName = DEPARTMENT_LABELS[known?.name] ?? known?.name ?? recipient.Department ?? "your department";
 
-            let generalTemp = `
+            // Function replacements, so a name containing $& or $1 is inserted
+            // literally instead of being treated as a replacement pattern.
+            const html = `
                 <div>
                     ${payloadData.body}
                 </div>
-                `;
+                `
+                .replace(/#name/g, () => recipient.Name ?? "")
+                .replace(/#dept/g, () => deptName);
 
-            generalTemp = generalTemp.replace(/#name/g, recipient.Name);
-            generalTemp = generalTemp.replace(/#dept/g, deptName);
-
-            const mailOptions = {
+            await transporter.sendMail({
                 from: process.env.EMAIL_USERNAME,
                 to: recipient.Email,
                 subject: payloadData.subject,
-                html: generalTemp,
-            };
+                html,
+            });
 
-            await transporter.sendMail(mailOptions);
+            sent.push(recipient.Email);
+        } catch (error) {
+            // One bad recipient must not abandon the rest of the batch.
+            console.error(`Failed to email ${recipient?.Email}:`, error.message);
+            failed.push({ email: recipient?.Email ?? null, reason: error.message });
         }
+    }
 
+    if (!sent.length) {
         return new Response(
-            JSON.stringify({ message: "Emails sent successfully" }),
-            { status: 200 }
-        );
-    } catch (error) {
-        return new Response(
-            JSON.stringify({ error: "Failed to send emails" }),
+            JSON.stringify({ error: "Failed to send emails", failed }),
             { status: 500 }
         );
     }
+
+    return new Response(
+        JSON.stringify({
+            message: `Sent ${sent.length} of ${recipients.length} emails`,
+            sent: sent.length,
+            failed,
+        }),
+        { status: 200 }
+    );
 }
