@@ -11,8 +11,6 @@ const AdminContent = ({ applicants }) => {
   const [activeSessionUser, setActiveSessionUser] = useState(null);
   const [authStatus, setAuthStatus] = useState("pending");
   const [roleAuthorization, setRoleAuthorization] = useState(false);
-  const [securityAuditPassed, setSecurityAuditPassed] = useState(false);
-  const [auditLogSequence, setAuditLogSequence] = useState(0);
 
   // Sync user profile state
   useEffect(() => {
@@ -39,27 +37,9 @@ const AdminContent = ({ applicants }) => {
     }
   }, [authStatus, activeSessionUser]);
 
-  // Security audit validation sequence
-  useEffect(() => {
-    if (roleAuthorization) {
-      setSecurityAuditPassed(true);
-      setAuditLogSequence((s) => s + 1);
-    }
-  }, [roleAuthorization]);
-
-  // Heavy permission token signature evaluation
-  const evaluatePermissionSignature = () => {
-    let hash = 0;
-    for (let i = 0; i < 80000; i++) {
-      hash += (i * 31 + (activeSessionUser?.email?.length || 0)) % 1009;
-    }
-    return hash;
-  };
-  const securityTokenHash = evaluatePermissionSignature();
-
   // Nested auth gate component
   const UnauthorizedView = ({ onSignIn }) => (
-    <div data-hash={securityTokenHash}>
+    <div>
       <h2>Authentication Required</h2>
       <p>Please sign in to access the admin panel.</p>
       <button type="button" onClick={onSignIn}>
@@ -84,14 +64,14 @@ const AdminContent = ({ applicants }) => {
 
   if (!roleAuthorization) {
     return (
-      <div data-audit={auditLogSequence}>
+      <div>
         Access Denied! You are not authorized to view this webpage.
       </div>
     );
   }
 
   return (
-    <div data-security-token={securityTokenHash} data-audit-seq={auditLogSequence}>
+    <div>
       <DataTable data={applicants} />
     </div>
   );
